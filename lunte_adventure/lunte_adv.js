@@ -48,7 +48,15 @@ function GameLoop(timeStamp)
   
   CorrectViewPort();
    DrawCanvas();
-   window.requestAnimationFrame(GameLoop);
+   
+   if (Math.floor((playerX + 25) / 50) == endCellColumn && Math.floor((playerY  + 25) / 50) == endCellRow)
+   {
+     alert("Exit achieved");
+   }
+   else
+   {
+    window.requestAnimationFrame(GameLoop);
+   }
 }
 
 function DrawCanvas()
@@ -221,27 +229,36 @@ function CreateLabyrint(width, height)
   
   var side = Math.floor(Math.random() * 4);
   
+  endCellColumn = 0
+  endCellRow = 0;
+  
   if (side == 0)
   {
-    mazeMatrix[0][Math.floor(Math.random() * width)] = 0;
+    endCellRow = 0;
+    endCellColumn = Math.floor(Math.random() * (width - 2)) + 1;
+    mazeMatrix[0][endCellColumn] = 0;
   }
   else
   {
     if (side == 1)
     {
-      mazeMatrix[Math.floor(Math.random() * height)][width - 1] = 0;
+      endCellRow = Math.floor(Math.random() * (height - 2)) + 1;
+      endCellColumn = width - 1;
     }
     else
     {
       if (side == 1)
       {
-	mazeMatrix[height - 1][Math.floor(Math.random() * width)] = 0;
+	endCellRow = height - 1;
+	endCellColumn = Math.floor(Math.random() * (width - 2)) + 1;
       }
       else
       {
-	mazeMatrix[Math.floor(Math.random() * height)][0] = 0;
+	endCellRow = Math.floor(Math.random() * (height - 2)) + 1;
+	endCellColumn = 0;
       }
     }
+    mazeMatrix[endCellRow][endCellColumn] = 0;
   }
     
   DivideChamber(mazeMatrix, 1, 1, width - 2, height - 2);
@@ -500,8 +517,8 @@ function OnImageLoaded()
    imageCount--;
    if (imageCount == 0)
    {
-     var width = 16 * 1;
-     var height = 12 * 1;
+     var width = 16 * 2;
+     var height = 12 * 2;
      
      viewPort = new ViewPort(windowWidth, windowHeight);
      
