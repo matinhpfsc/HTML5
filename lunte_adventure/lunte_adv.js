@@ -13,37 +13,22 @@ function GameLoop(timeStamp)
   var targetCellColumn = 0;
   var targetCellRow = 0;
 
+  var playerCellX = Math.floor((playerX + 24.5) / 50);
+  var playerCellY = Math.floor((playerY + 25.5) / 50);
+  
   targetCellColumn = Math.floor((playerX + 25) / 50);
   targetCellRow = Math.floor((playerY  + 25) / 50);
 
-  if (playerSpeedX != 0)
-  {
-    if (playerSpeedX > 0)
-    {
-      targetCellColumn = Math.floor((playerX + 50 + playerSpeedX) / 50);
-    }
-    else
-    {
-      targetCellColumn = Math.floor((playerX + playerSpeedX) / 50);
-    }
-  }
-  
-  if (playerSpeedY != 0)
-  {
-    if (playerSpeedY > 0)
-    {
-      targetCellRow = Math.floor((playerY  + 50 + playerSpeedY) / 50);
-    }
-    else
-    {
-      targetCellRow = Math.floor((playerY + playerSpeedY) / 50);
-    }
-  }
+  var qx = playerX + 24.5 + (orientationX * (playerSpeed + 24.5));
+  var qy = playerY + 24.5 + (orientationY * (playerSpeed + 24.5));
+
+  targetCellColumn = Math.floor(qx / 50);
+  targetCellRow = Math.floor(qy / 50);
   
   if (mazeMatrix[targetCellRow][targetCellColumn] == 0)
   {
-    playerX += playerSpeedX;
-    playerY += playerSpeedY;
+    playerX += orientationX * playerSpeed;
+    playerY += orientationY * playerSpeed;
   }
   
   CorrectViewPort();
@@ -495,15 +480,15 @@ function DrawMaze(mazeMatrix, viewPort)
 function DrawPlayer(viewPort)
 {
   var spriteIndex = 0;
-  if (playerSpeedX > 0)
+  if (orientationX > 0)
   {
     spriteIndex = 24;
   }
-  if (playerSpeedX < 0)
+  if (orientationX < 0)
   {
     spriteIndex = 8;
   }
-  if (playerSpeedY > 0)
+  if (orientationY > 0)
   {
     spriteIndex = 16;
   }
@@ -524,11 +509,11 @@ function OnImageLoaded()
      
      playerX = 50;
      playerY = 50;
-     playerSpeedX = 0;
-     playerSpeedY = 0;
      playerSpeed = 0;
      playerDirectionX = 0;
      playerDirectionY = 0;
+     orientationX = 0;
+     orientationY = 1;
      
      mazeMatrix = CreateLabyrint(width, height);
      
@@ -551,30 +536,37 @@ function OnKeyDown(e)
 {
   if (e.keyCode == 40)
   {
-    playerSpeedY = +4;
+    orientationX = 0;
+    orientationY = +1;
+    playerSpeed = 4;
     return;
   }
   if (e.keyCode == 38)
   {
-    playerSpeedY = -4;
+    orientationX = 0;
+    orientationY = -1;
+    playerSpeed = 4;
     return;
   }
   if (e.keyCode == 39)
   {
-    playerSpeedX = +4;
+    orientationX = +1;
+    orientationY = 0;
+    playerSpeed = 4;
     return;
   }
   if (e.keyCode == 37)
   {
-    playerSpeedX = -4;
+    orientationX = -1;
+    orientationY = 0;
+    playerSpeed = 4;
     return;
   }
 }
 
 function OnKeyUp(e)
 {
-  playerSpeedX = 0;
-  playerSpeedY = 0;
+  playerSpeed = 0;
 }
 
 function Start()
