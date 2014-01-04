@@ -10,27 +10,31 @@ function ViewPort(width, height)
 function GameLoop(timeStamp)
 {
   //TODO Spruenge begrenzen!
-  var targetCellColumn = 0;
-  var targetCellRow = 0;
+  //var targetCellColumn = 0;
+  //var targetCellRow = 0;
 
   var playerCellX = Math.floor((playerX + 24.5) / 50);
   var playerCellY = Math.floor((playerY + 25.5) / 50);
   
-  targetCellColumn = Math.floor((playerX + 25) / 50);
-  targetCellRow = Math.floor((playerY  + 25) / 50);
-
-  var qx = playerX + 24.5 + (orientationX * (playerSpeed + 24.5));
-  var qy = playerY + 24.5 + (orientationY * (playerSpeed + 24.5));
-
-  targetCellColumn = Math.floor(qx / 50);
-  targetCellRow = Math.floor(qy / 50);
+  var cellLocationX = playerCellX * 50;
+  var cellLocationY = playerCellY * 50;
   
-  if (mazeMatrix[targetCellRow][targetCellColumn] == 0)
+  var distanceToCellLocation = (cellLocationX - playerX) * orientationX
+			     + (cellLocationY - playerY) * orientationY;
+  
+  var currentPlayerSpeed = playerSpeed;
+  if (playerSpeed > distanceToCellLocation)
   {
-    playerX += orientationX * playerSpeed;
-    playerY += orientationY * playerSpeed;
+    //Pruefe, ob naechtse Zelle begehbar ist.
+    if (mazeMatrix[playerCellY + orientationY][playerCellX + orientationX] == 1)
+    {
+      currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
+    }
   }
-  
+
+  playerX += orientationX * currentPlayerSpeed;
+  playerY += orientationY * currentPlayerSpeed;
+
   CorrectViewPort();
    DrawCanvas();
    
