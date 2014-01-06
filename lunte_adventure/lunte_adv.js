@@ -30,6 +30,25 @@ function GameLoop(timeStamp)
     {
       currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
     }
+    else
+    {
+	var distanceToOtherCellLocation = ((cellLocationX - playerX) * Math.abs(orientationY)
+			      + (cellLocationY - playerY) * Math.abs(orientationX));
+
+	var currentPlayerOtherSpeed = Math.min(playerSpeed, Math.abs(distanceToOtherCellLocation));
+	if (distanceToOtherCellLocation > 0)
+	{
+
+	  playerX += Math.abs(orientationY) * currentPlayerOtherSpeed;
+	  playerY += Math.abs(orientationX) * currentPlayerOtherSpeed;
+	}
+	else
+	{
+  	  playerX -= Math.abs(orientationY) * currentPlayerOtherSpeed;
+	  playerY -= Math.abs(orientationX) * currentPlayerOtherSpeed;
+	}
+	currentPlayerSpeed = playerSpeed - currentPlayerOtherSpeed;
+    }
   }
 
   playerX += orientationX * currentPlayerSpeed;
