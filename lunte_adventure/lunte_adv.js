@@ -1,4 +1,14 @@
 
+function Vector2d(x, y)
+{
+  this.x = x;
+  this.y = y;
+  this.mul = function(scalar)
+  {
+    return new Vector2d(this.x * scalar, this.y * scalar);
+  };
+}
+
 function ViewPort(width, height)
 {
   this.x = 0;
@@ -10,35 +20,30 @@ function ViewPort(width, height)
 function GameLoop(timeStamp)
 {
   //TODO Spruenge begrenzen!
-  //var targetCellColumn = 0;
-  //var targetCellRow = 0;
 
-  var playerCellX = Math.floor((playerX + 24.5) / 50);
-  var playerCellY = Math.floor((playerY + 25.5) / 50);
+  var playerCellPosition = new Vector2d(Math.floor((playerX + 24.5) / 50), Math.floor((playerY + 25.5) / 50));
   
-  var cellLocationX = playerCellX * 50;
-  var cellLocationY = playerCellY * 50;
+  var cellLocation = playerCellPosition.mul(50);
   
-  var distanceToCellLocation = (cellLocationX - playerX) * orientationX
-			     + (cellLocationY - playerY) * orientationY;
+  var distanceToCellLocation = (cellLocation.x - playerX) * orientationX
+			     + (cellLocation.y - playerY) * orientationY;
   
   var currentPlayerSpeed = playerSpeed;
   if (playerSpeed > distanceToCellLocation)
   {
     //Pruefe, ob naechtse Zelle begehbar ist.
-    if (mazeMatrix[playerCellY + orientationY][playerCellX + orientationX] == 1)
+    if (mazeMatrix[playerCellPosition.y + orientationY][playerCellPosition.x + orientationX] == 1)
     {
       currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
     }
     else
     {
-	var distanceToOtherCellLocation = ((cellLocationX - playerX) * Math.abs(orientationY)
-			      + (cellLocationY - playerY) * Math.abs(orientationX));
+	var distanceToOtherCellLocation = ((cellLocation.x - playerX) * Math.abs(orientationY)
+			      + (cellLocation.y - playerY) * Math.abs(orientationX));
 
 	var currentPlayerOtherSpeed = Math.min(playerSpeed, Math.abs(distanceToOtherCellLocation));
 	if (distanceToOtherCellLocation > 0)
 	{
-
 	  playerX += Math.abs(orientationY) * currentPlayerOtherSpeed;
 	  playerY += Math.abs(orientationX) * currentPlayerOtherSpeed;
 	}
@@ -287,149 +292,33 @@ function StartImageLoading()
    activeImage.src = "aktive.png";
 }
 
+
+function GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow)
+{
+  if (cellColumn < 0 || cellRow < 0 || cellRow >= mazeMatrix.length || cellColumn >= mazeMatrix[cellRow].length)
+  {
+    return 0;
+  }
+  return mazeMatrix[cellRow][cellColumn];
+}
+
+
 function GetSpriteIndex(mazeMatrix, cellColumn, cellRow)
 {
-  if (mazeMatrix[cellRow][cellColumn] == 0)
+  if (GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow) == 0)
   {
     return 8;
   }
   else
   {
-    var top = 0;
-    var right = 0;
-    var bottom = 0;
-    var left = 0;
-    
-    if (cellColumn > 0)
-    {
-      if (mazeMatrix[cellRow][cellColumn - 1] == 1)
-      {
-	left = 1;
-      }
-      else
-      {
-	left = 0;
-      }
-    }
-    else
-    {
-      left = 0;
-    }
-
-    if (cellColumn < mazeMatrix[cellRow].length - 1)
-    {
-      if (mazeMatrix[cellRow][cellColumn + 1] == 1)
-      {
-	right = 1;
-      }
-      else
-      {
-	right = 0;
-      }
-    }
-    else
-    {
-      right = 0;
-    }
-
-    //---
-    
-    if (cellRow > 0)
-    {
-      if (mazeMatrix[cellRow - 1][cellColumn] == 1)
-      {
-	top = 1;
-      }
-      else
-      {
-	top = 0;
-      }
-    }
-    else
-    {
-      top = 0;
-    }
-
-    if (cellRow < mazeMatrix.length - 1)
-    {
-      if (mazeMatrix[cellRow + 1][cellColumn] == 1)
-      {
-	bottom = 1;
-      }
-      else
-      {
-	bottom = 0;
-      }
-    }
-    else
-    {
-      bottom = 0;
-    }
+    var left = GetMazeMatrixValue(mazeMatrix, cellColumn - 1, cellRow);
+    var right = GetMazeMatrixValue(mazeMatrix, cellColumn + 1, cellRow);
+    var top = GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow - 1);
+    var bottom = GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow + 1);
 
     var number = left * 8 + bottom * 4 + right * 2 + top * 1;
-    
-    if (number == 10)
-    {
-      return 22;
-    }
-    if (number == 15)
-    {
-      return 27;
-    }
-    if (number == 5)
-    {
-      return 26;
-    }
-    if (number == 1)
-    {
-      return 30;
-    }
-    if (number == 4)
-    {
-      return 25;
-    }
-    if (number == 2)
-    {
-      return 32;
-    }
-    if (number == 8)
-    {
-      return 33;
-    }
-    if (number == 3)
-    {
-      return 31;
-    }
-    if (number == 6)
-    {
-      return 21;
-    }
-    if (number == 12)
-    {
-      return 23;
-    }
-    if (number == 9)
-    {
-      return 28;
-    }
-    if (number == 7)
-    {
-      return 29;
-    }
-    if (number == 14)
-    {
-      return 34;
-    }
-    if (number == 13)
-    {
-      return 19;
-    }
-    if (number == 11)
-    {
-      return 24;
-    }
-    
-    return 20;
+        
+    return mazeSpriteIndexes[number];
   }  
 }
 
@@ -533,8 +422,6 @@ function OnImageLoaded()
      playerX = 50;
      playerY = 50;
      playerSpeed = 0;
-     playerDirectionX = 0;
-     playerDirectionY = 0;
      orientationX = 0;
      orientationY = 1;
      
@@ -594,6 +481,25 @@ function OnKeyUp(e)
 
 function Start()
 {
+  //Set image indexes for the maze
+  mazeSpriteIndexes = new Array(16);
+  mazeSpriteIndexes[0] = 20;
+  mazeSpriteIndexes[1] = 30;
+  mazeSpriteIndexes[2] = 32;
+  mazeSpriteIndexes[3] = 31;
+  mazeSpriteIndexes[4] = 25;
+  mazeSpriteIndexes[5] = 26;
+  mazeSpriteIndexes[6] = 21;
+  mazeSpriteIndexes[7] = 29;
+  mazeSpriteIndexes[8] = 33;
+  mazeSpriteIndexes[9] = 28;
+  mazeSpriteIndexes[10] = 22;
+  mazeSpriteIndexes[11] = 24;
+  mazeSpriteIndexes[12] = 23;
+  mazeSpriteIndexes[13] = 19;
+  mazeSpriteIndexes[14] = 34;
+  mazeSpriteIndexes[15] = 27;
+  
    var canvas = document.getElementById("myCanvas");
 
    windowWidth = canvas.width;
