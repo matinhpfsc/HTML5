@@ -3,6 +3,7 @@ function Player()
 {
   this.location = new Vector2d(0,0);
   this.orientation = new Vector2d(0, 1);
+  this.animationStartTimeStamp = null;
 }
 
 function Vector2d(x, y)
@@ -33,7 +34,22 @@ function GameLoop(timeStamp)
   
   var distanceToCellLocation = (cellLocation.x - humanPlayer.location.x) * humanPlayer.orientation.x
 			     + (cellLocation.y - humanPlayer.location.y) * humanPlayer.orientation.y;
-  
+ 
+  if (playerSpeed != 0)
+  {
+    if (humanPlayer.animationStartTimeStamp == null)
+    {
+      humanPlayer.animationStartTimeStamp = timeStamp;
+    }
+  }
+  else
+  {
+    if (humanPlayer.animationStartTimeStamp != null)
+    {
+      humanPlayer.animationStartTimeStamp = null;
+    }
+  }
+			     
   var currentPlayerSpeed = playerSpeed;
   if (playerSpeed > distanceToCellLocation)
   {
@@ -66,7 +82,7 @@ function GameLoop(timeStamp)
   humanPlayer.location.y += humanPlayer.orientation.y * currentPlayerSpeed;
 
   CorrectViewPort();
-  DrawCanvas();
+  DrawCanvas(timeStamp);
    
    if (Math.floor((humanPlayer.location.x + 25) / 50) == endCellColumn && Math.floor((humanPlayer.location.y  + 25) / 50) == endCellRow)
    {
@@ -94,10 +110,10 @@ function GameLoop(timeStamp)
 counter = 0;
 start = 0;
 
-function DrawCanvas()
+function DrawCanvas(timeStamp)
 {
   DrawMaze(mazeMatrix, viewPort);
-  DrawPlayer(viewPort);
+  DrawPlayer(viewPort, timeStamp);
   
   canvasContext.drawImage(doubleBufferCanvas, 0, 0);
 }
@@ -411,8 +427,13 @@ function DrawMaze(mazeMatrix, viewPort)
   }  
 }
 
-function DrawPlayer(viewPort)
+function DrawPlayer(viewPort, timeStamp)
 {
+  var animationIndex = 0;
+  if (humanPlayer.animationStartTimeStamp != null)
+  {
+    animationIndex = Math.floor((timeStamp - humanPlayer.animationStartTimeStamp) / 100) % 8;
+  }
   var spriteIndex = 0;
   if (humanPlayer.orientation.x > 0)
   {
@@ -426,6 +447,7 @@ function DrawPlayer(viewPort)
   {
     spriteIndex = 16;
   }
+  spriteIndex += animationIndex;
   var spriteY = Math.floor(spriteIndex / 8);
   var spriteX = spriteIndex % 8;
   doubleBufferCanvasContext.drawImage(activeImage, 50 * spriteX, 50 * spriteY, 50, 50, humanPlayer.location.x - viewPort.x, humanPlayer.location.y - viewPort.y, 50, 50);
