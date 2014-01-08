@@ -1,4 +1,10 @@
 
+function Player()
+{
+  this.location = new Vector2d(0,0);
+  this.orientation = new Vector2d(0, 1);
+}
+
 function Vector2d(x, y)
 {
   this.x = x;
@@ -21,56 +27,72 @@ function GameLoop(timeStamp)
 {
   //TODO Spruenge begrenzen!
 
-  var playerCellPosition = new Vector2d(Math.floor((playerX + 24.5) / 50), Math.floor((playerY + 25.5) / 50));
+  var playerCellPosition = new Vector2d(Math.floor((humanPlayer.location.x + 24.5) / 50), Math.floor((humanPlayer.location.y + 25.5) / 50));
   
   var cellLocation = playerCellPosition.mul(50);
   
-  var distanceToCellLocation = (cellLocation.x - playerX) * orientationX
-			     + (cellLocation.y - playerY) * orientationY;
+  var distanceToCellLocation = (cellLocation.x - humanPlayer.location.x) * humanPlayer.orientation.x
+			     + (cellLocation.y - humanPlayer.location.y) * humanPlayer.orientation.y;
   
   var currentPlayerSpeed = playerSpeed;
   if (playerSpeed > distanceToCellLocation)
   {
     //Pruefe, ob naechtse Zelle begehbar ist.
-    if (mazeMatrix[playerCellPosition.y + orientationY][playerCellPosition.x + orientationX] == 1)
+    if (mazeMatrix[playerCellPosition.y + humanPlayer.orientation.y][playerCellPosition.x + humanPlayer.orientation.x] == 1)
     {
       currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
     }
     else
     {
-	var distanceToOtherCellLocation = ((cellLocation.x - playerX) * Math.abs(orientationY)
-			      + (cellLocation.y - playerY) * Math.abs(orientationX));
+	var distanceToOtherCellLocation = ((cellLocation.x - humanPlayer.location.x) * Math.abs(humanPlayer.orientation.y)
+			      + (cellLocation.y - humanPlayer.location.y) * Math.abs(humanPlayer.orientation.x));
 
 	var currentPlayerOtherSpeed = Math.min(playerSpeed, Math.abs(distanceToOtherCellLocation));
 	if (distanceToOtherCellLocation > 0)
 	{
-	  playerX += Math.abs(orientationY) * currentPlayerOtherSpeed;
-	  playerY += Math.abs(orientationX) * currentPlayerOtherSpeed;
+	  humanPlayer.location.x += Math.abs(humanPlayer.orientation.y) * currentPlayerOtherSpeed;
+	  humanPlayer.location.y += Math.abs(humanPlayer.orientation.x) * currentPlayerOtherSpeed;
 	}
 	else
 	{
-  	  playerX -= Math.abs(orientationY) * currentPlayerOtherSpeed;
-	  playerY -= Math.abs(orientationX) * currentPlayerOtherSpeed;
+  	  humanPlayer.location.x -= Math.abs(humanPlayer.orientation.y) * currentPlayerOtherSpeed;
+	  humanPlayer.location.y -= Math.abs(humanPlayer.orientation.x) * currentPlayerOtherSpeed;
 	}
 	currentPlayerSpeed = playerSpeed - currentPlayerOtherSpeed;
     }
   }
 
-  playerX += orientationX * currentPlayerSpeed;
-  playerY += orientationY * currentPlayerSpeed;
+  humanPlayer.location.x += humanPlayer.orientation.x * currentPlayerSpeed;
+  humanPlayer.location.y += humanPlayer.orientation.y * currentPlayerSpeed;
 
   CorrectViewPort();
-   DrawCanvas();
+  DrawCanvas();
    
-   if (Math.floor((playerX + 25) / 50) == endCellColumn && Math.floor((playerY  + 25) / 50) == endCellRow)
+   if (Math.floor((humanPlayer.location.x + 25) / 50) == endCellColumn && Math.floor((humanPlayer.location.y  + 25) / 50) == endCellRow)
    {
      alert("Exit achieved");
    }
    else
    {
+/*     if (start == 0)
+     {
+       start = timeStamp;
+     }
+     counter++;
+     if ((timeStamp - start) > 10000)
+     {
+       var fps = counter / 10;
+       alert(fps);
+     }
+     else*/
+     {
     window.requestAnimationFrame(GameLoop);
+     }
    }
 }
+
+counter = 0;
+start = 0;
 
 function DrawCanvas()
 {
@@ -327,21 +349,21 @@ function CorrectViewPort()
   var width = mazeMatrix[0].length;
   var height = mazeMatrix.length;
   
-  if (playerX - viewPort.x > windowWidth - 150)
+  if (humanPlayer.location.x - viewPort.x > windowWidth - 150)
   {
-    viewPort.x = playerX - windowWidth + 150 ;
+    viewPort.x = humanPlayer.location.x - windowWidth + 150 ;
   }
-  if (playerX - viewPort.x < 100)
+  if (humanPlayer.location.x - viewPort.x < 100)
   {
-    viewPort.x = playerX - 100 ;
+    viewPort.x = humanPlayer.location.x - 100 ;
   }
-  if (playerY - viewPort.y > windowHeight - 150)
+  if (humanPlayer.location.y - viewPort.y > windowHeight - 150)
   {
-    viewPort.y = playerY - windowHeight + 150 ;
+    viewPort.y = humanPlayer.location.y - windowHeight + 150 ;
   }
-  if (playerY - viewPort.y < 100)
+  if (humanPlayer.location.y - viewPort.y < 100)
   {
-    viewPort.y = playerY - 100 ;
+    viewPort.y = humanPlayer.location.y - 100 ;
   }
   
   if (viewPort.x + windowWidth > width * 50)
@@ -392,21 +414,21 @@ function DrawMaze(mazeMatrix, viewPort)
 function DrawPlayer(viewPort)
 {
   var spriteIndex = 0;
-  if (orientationX > 0)
+  if (humanPlayer.orientation.x > 0)
   {
     spriteIndex = 24;
   }
-  if (orientationX < 0)
+  if (humanPlayer.orientation.x < 0)
   {
     spriteIndex = 8;
   }
-  if (orientationY > 0)
+  if (humanPlayer.orientation.y > 0)
   {
     spriteIndex = 16;
   }
   var spriteY = Math.floor(spriteIndex / 8);
   var spriteX = spriteIndex % 8;
-  doubleBufferCanvasContext.drawImage(activeImage, 50 * spriteX, 50 * spriteY, 50, 50, playerX - viewPort.x, playerY - viewPort.y, 50, 50);
+  doubleBufferCanvasContext.drawImage(activeImage, 50 * spriteX, 50 * spriteY, 50, 50, humanPlayer.location.x - viewPort.x, humanPlayer.location.y - viewPort.y, 50, 50);
 }
 
 function OnImageLoaded()
@@ -419,11 +441,10 @@ function OnImageLoaded()
      
      viewPort = new ViewPort(windowWidth, windowHeight);
      
-     playerX = 50;
-     playerY = 50;
+     humanPlayer = new Player();
+     humanPlayer.location.x = 50;
+     humanPlayer.location.y = 50;
      playerSpeed = 0;
-     orientationX = 0;
-     orientationY = 1;
      
      mazeMatrix = CreateLabyrint(width, height);
      
@@ -446,29 +467,29 @@ function OnKeyDown(e)
 {
   if (e.keyCode == 40)
   {
-    orientationX = 0;
-    orientationY = +1;
+    humanPlayer.orientation.x = 0;
+    humanPlayer.orientation.y = +1;
     playerSpeed = 4;
     return;
   }
   if (e.keyCode == 38)
   {
-    orientationX = 0;
-    orientationY = -1;
+    humanPlayer.orientation.x = 0;
+    humanPlayer.orientation.y = -1;
     playerSpeed = 4;
     return;
   }
   if (e.keyCode == 39)
   {
-    orientationX = +1;
-    orientationY = 0;
+    humanPlayer.orientation.x = +1;
+    humanPlayer.orientation.y = 0;
     playerSpeed = 4;
     return;
   }
   if (e.keyCode == 37)
   {
-    orientationX = -1;
-    orientationY = 0;
+    humanPlayer.orientation.x = -1;
+    humanPlayer.orientation.y = 0;
     playerSpeed = 4;
     return;
   }
