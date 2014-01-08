@@ -10,10 +10,16 @@ function Vector2d(x, y)
 {
   this.x = x;
   this.y = y;
+
   this.mul = function(scalar)
   {
     return new Vector2d(this.x * scalar, this.y * scalar);
   };
+  
+  this.add = function(otherVector)
+  {
+    return new Vector2d(this.x + otherVector.x, this.y + otherVector.y);
+  }
 }
 
 function ViewPort(width, height)
@@ -78,9 +84,8 @@ function GameLoop(timeStamp)
     }
   }
 
-  humanPlayer.location.x += humanPlayer.orientation.x * currentPlayerSpeed;
-  humanPlayer.location.y += humanPlayer.orientation.y * currentPlayerSpeed;
-
+  humanPlayer.location = humanPlayer.location.add(humanPlayer.orientation.mul(currentPlayerSpeed));
+  
   CorrectViewPort();
   DrawCanvas(timeStamp);
    
