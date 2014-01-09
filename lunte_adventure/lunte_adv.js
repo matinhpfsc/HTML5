@@ -1,208 +1,3 @@
-/*
-function Maze(width, height)
-{
-  this.mazeMatrix = CreateLabyrint(width, height);
-  
-  function CreateLabyrint(width, height)
-  {
-    var mazeMatrix = new Array();
-    for (var cellRow = 0; cellRow < height; cellRow++)
-    {
-      mazeMatrix[cellRow] = new Array();
-      for (var cellColumn = 0; cellColumn < width; cellColumn++)
-      {
-	var value = 0;
-	if (cellColumn == 0 || cellRow == 0 || cellColumn + 1 == width || cellRow + 1 == height)
-	{
-	  value = 1;
-	}
-	mazeMatrix[cellRow][cellColumn] = value;
-      }
-    }
-    
-    var side = Math.floor(Math.random() * 4);
-    
-    endCellColumn = 0
-    endCellRow = 0;
-    
-    if (side == 0)
-    {
-      endCellRow = 0;
-      endCellColumn = Math.floor(Math.random() * (width - 2)) + 1;
-      mazeMatrix[0][endCellColumn] = 0;
-    }
-    else
-    {
-      if (side == 1)
-      {
-	endCellRow = Math.floor(Math.random() * (height - 2)) + 1;
-	endCellColumn = width - 1;
-      }
-      else
-      {
-	if (side == 1)
-	{
-	  endCellRow = height - 1;
-	  endCellColumn = Math.floor(Math.random() * (width - 2)) + 1;
-	}
-	else
-	{
-	  endCellRow = Math.floor(Math.random() * (height - 2)) + 1;
-	  endCellColumn = 0;
-	}
-      }
-      mazeMatrix[endCellRow][endCellColumn] = 0;
-    }
-      
-    DivideChamber(mazeMatrix, 1, 1, width - 2, height - 2);
-    
-    return mazeMatrix;
-  }
-  
-  function DivideChamber(mazeMatrix, chamberX, chamberY, chamberWidth, chamberHeight)
-  {
-    var minimumCellSize = 1;
-    minimumCellSize = Math.max(minimumCellSize, 1);
-
-    var wallXPosition = GetWallXPosition(mazeMatrix, chamberX, chamberY, chamberWidth, chamberHeight, minimumCellSize);
-    var wallYPosition = GetWallYPosition(mazeMatrix, chamberX, chamberY, chamberWidth, chamberHeight, minimumCellSize);
-
-    var topDoorCap = 1;
-    var bottomDoorCap = 1;
-    var leftDoorCap = 1;
-    var rightDoorCap = 1;
-    
-    var noDoorIndex = 0;
-    if (wallXPosition != null && wallYPosition != null)
-    {
-      noDoorIndex = Math.floor(Math.random() * 4);
-    }
-    else
-    {
-      if (wallXPosition != null)
-      {
-	noDoorIndex = Math.floor(Math.random() * 2);
-      }
-      else
-      {
-	noDoorIndex = Math.floor(Math.random() * 2) + 2;
-      }
-    }
-    
-    
-    if (noDoorIndex == 0)
-    {
-      topDoorCap = 0;
-    }
-    else
-    {
-      if (noDoorIndex == 1)
-      {
-	bottomDoorCap = 0;
-      }
-      else
-      {
-	if (noDoorIndex == 2)
-	{
-	  rightDoorCap = 0;
-	}
-	else
-	{
-	  if (noDoorIndex == 3)
-	  {
-	    leftDoorCap = 0;
-	  }
-	}
-      }
-    }
-    
-    if (wallXPosition != null)
-    {
-      for (var y = chamberY + topDoorCap; y < chamberY + chamberHeight - bottomDoorCap; y++)
-      {
-	mazeMatrix[y][wallXPosition] = 1;
-      }
-    }
-    if (wallYPosition != null)
-    {
-      for (var x = chamberX + leftDoorCap; x < chamberX + chamberWidth - rightDoorCap; x++)
-      {
-	mazeMatrix[wallYPosition][x] = 1;
-      }
-    }
-
-    if (wallXPosition != null && wallYPosition != null)
-    {
-      //LT
-      DivideChamber(mazeMatrix, chamberX, chamberY, wallXPosition - chamberX, wallYPosition - chamberY);
-      //RT
-      DivideChamber(mazeMatrix, wallXPosition + 1, chamberY, chamberX + chamberWidth - (wallXPosition + 1), wallYPosition - chamberY);
-      //LB
-      DivideChamber(mazeMatrix, chamberX, wallYPosition + 1, wallXPosition - chamberX, chamberY + chamberHeight - (wallYPosition + 1));
-      //RB
-      DivideChamber(mazeMatrix, wallXPosition + 1, wallYPosition + 1, chamberX + chamberWidth - (wallXPosition + 1), chamberY + chamberHeight - (wallYPosition + 1));
-    }
-    else
-    {
-      if (wallXPosition != null)
-      {
-	//L
-	DivideChamber(mazeMatrix, chamberX, chamberY, wallXPosition - chamberX, chamberHeight);
-	//R
-	DivideChamber(mazeMatrix, wallXPosition + 1, chamberY, chamberX + chamberWidth - (wallXPosition + 1), chamberHeight);
-      }
-      else
-      {
-	if (wallYPosition != null)
-	{
-	  //T
-	  DivideChamber(mazeMatrix, chamberX, chamberY, chamberWidth, wallYPosition - chamberY);
-	  //B
-	  DivideChamber(mazeMatrix, chamberX, wallYPosition + 1, chamberWidth, chamberY + chamberHeight - (wallYPosition + 1));
-	}
-      }
-    }
-  }
-
-  function GetWallXPosition(mazeMatrix, chamberX, chamberY, chamberWidth, chamberHeight, minimumCellSize)
-  {
-    var validWallPositions = new Array();
-    for (var x = chamberX + minimumCellSize; x < chamberX + chamberWidth - minimumCellSize; x++)
-    {
-      if (mazeMatrix[chamberY - 1][x] == 1 && mazeMatrix[chamberY + chamberHeight][x] == 1)
-      {
-	validWallPositions[validWallPositions.length] = x;
-      }
-    }
-
-    if (validWallPositions.length > 0)
-    {
-      var index = Math.floor(Math.random() * validWallPositions.length);
-      return validWallPositions[index];
-    }
-    return null;
-  }
-
-  function GetWallYPosition(mazeMatrix, chamberX, chamberY, chamberWidth, chamberHeight, minimumCellSize)
-  {
-    var validWallPositions = new Array();
-    for (var y = chamberY + minimumCellSize; y < chamberY + chamberHeight - minimumCellSize; y++)
-    {
-      if (mazeMatrix[y][chamberX - 1] == 1 && mazeMatrix[y][chamberX + chamberWidth] == 1)
-      {
-	validWallPositions[validWallPositions.length] = y;
-      }
-    }
-    
-    if (validWallPositions.length > 0)
-    {
-      var index = Math.floor(Math.random() * validWallPositions.length);
-      return validWallPositions[index];
-    }
-    return null;
-  }
-}
-*/
 function Player()
 {
   this.location = new Vector2d(0,0);
@@ -264,7 +59,7 @@ function GameLoop(timeStamp)
   if (playerSpeed > distanceToCellLocation)
   {
     //Pruefe, ob naechtse Zelle begehbar ist.
-    if (mazeMatrix[playerCellPosition.y + humanPlayer.orientation.y][playerCellPosition.x + humanPlayer.orientation.x] == 1)
+    if (gameMaze.getFieldValue(playerCellPosition.x + humanPlayer.orientation.x, playerCellPosition.y + humanPlayer.orientation.y) == 1)
     {
       currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
     }
@@ -321,7 +116,7 @@ start = 0;
 
 function DrawCanvas(timeStamp)
 {
-  DrawMaze(mazeMatrix, viewPort);
+  DrawMaze(viewPort);
   DrawPlayer(viewPort, timeStamp);
   
   canvasContext.drawImage(doubleBufferCanvas, 0, 0);
@@ -340,28 +135,18 @@ function StartImageLoading()
    activeImage.src = "aktive.png";
 }
 
-function GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow)
+function GetSpriteIndex(cellColumn, cellRow)
 {
-  if (cellColumn < 0 || cellRow < 0 || cellRow >= mazeMatrix.length || cellColumn >= mazeMatrix[cellRow].length)
-  {
-    return 0;
-  }
-  return mazeMatrix[cellRow][cellColumn];
-}
-
-
-function GetSpriteIndex(mazeMatrix, cellColumn, cellRow)
-{
-  if (GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow) == 0)
+  if (gameMaze.getFieldValue(cellColumn, cellRow) == 0)
   {
     return 8;
   }
   else
   {
-    var left = GetMazeMatrixValue(mazeMatrix, cellColumn - 1, cellRow);
-    var right = GetMazeMatrixValue(mazeMatrix, cellColumn + 1, cellRow);
-    var top = GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow - 1);
-    var bottom = GetMazeMatrixValue(mazeMatrix, cellColumn, cellRow + 1);
+    var left = gameMaze.getFieldValue(cellColumn - 1, cellRow);
+    var right = gameMaze.getFieldValue(cellColumn + 1, cellRow);
+    var top = gameMaze.getFieldValue(cellColumn, cellRow - 1);
+    var bottom = gameMaze.getFieldValue(cellColumn, cellRow + 1);
 
     var number = left * 8 + bottom * 4 + right * 2 + top * 1;
         
@@ -371,8 +156,8 @@ function GetSpriteIndex(mazeMatrix, cellColumn, cellRow)
 
 function CorrectViewPort()
 {
-  var width = mazeMatrix[0].length;
-  var height = mazeMatrix.length;
+  var width = gameMaze.width;
+  var height = gameMaze.height;
   
   if (humanPlayer.location.x - viewPort.x > windowWidth - 150)
   {
@@ -409,10 +194,10 @@ function CorrectViewPort()
   }  
 }
 
-function DrawMaze(mazeMatrix, viewPort)
+function DrawMaze(viewPort)
 {
-  var width = mazeMatrix[0].length;
-  var height = mazeMatrix.length;
+  var width = gameMaze.width;
+  var height = gameMaze.height;
     
   var startColumn = Math.floor(viewPort.x / 50);
   var startRow = Math.floor(viewPort.y / 50);
@@ -427,7 +212,7 @@ function DrawMaze(mazeMatrix, viewPort)
   {
     for (var cellRow = startRow; cellRow < height; cellRow++)
     {
-      var spriteIndex = GetSpriteIndex(mazeMatrix, cellColumn, cellRow);
+      var spriteIndex = GetSpriteIndex(cellColumn, cellRow);
       
       var spriteY = Math.floor(spriteIndex / 5);
       var spriteX = spriteIndex % 5;
@@ -478,9 +263,6 @@ function OnImageLoaded()
      playerSpeed = 0;
      
      gameMaze = new Maze(width, height);
-     mazeMatrix = gameMaze.mazeMatrix;
-     
-     //DrawMaze(mazeMatrix, viewPort);
      
      window.addEventListener("keydown", OnKeyDown, false);
      window.addEventListener("keyup", OnKeyUp, false);

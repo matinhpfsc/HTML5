@@ -1,6 +1,20 @@
 function Maze(width, height)
 {
-  this.mazeMatrix = CreateLabyrint(width, height);
+  this.EMPTY = 0;
+  this.WALL = 1;
+  
+  this.width = width;
+  this.height = height;
+  this.getFieldValue = function(cellColumn, cellRow)
+  {
+    if (cellColumn < 0 || cellRow < 0 || cellRow >= height || cellColumn >= width)
+    {
+      return this.EMPTY;
+    }
+    return mazeMatrix[cellRow][cellColumn];
+  }
+
+  var mazeMatrix = CreateLabyrint(width, height);
   
   function CreateLabyrint(width, height)
   {
