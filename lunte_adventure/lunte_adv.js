@@ -1,8 +1,11 @@
-function Player()
+function Player(image, imageIndex)
 {
   this.location = new Vector2d(0,0);
   this.orientation = new Vector2d(0, 1);
   this.animationStartTimeStamp = null;
+  this.image = image;
+  this.imageIndex = imageIndex;
+  this.speed = 0;
 }
 
 function Vector2d(x, y)
@@ -21,7 +24,7 @@ function Vector2d(x, y)
   }
 }
 
-function ViewPort(width, height)
+function ViewPort(width, height)  
 {
   this.x = 0;
   this.y = 0;
@@ -29,61 +32,70 @@ function ViewPort(width, height)
   this.height = height;
 }
 
+function MovePlayer(timeStamp)
+{
+}
+
 function GameLoop(timeStamp)
 {
   //TODO Spruenge begrenzen!
 
-  var playerCellPosition = new Vector2d(Math.floor((humanPlayer.location.x + 24.5) / 50), Math.floor((humanPlayer.location.y + 25.5) / 50));
+  for (var playerIndex = 0; playerIndex < allPlayers.length; playerIndex++)
+  {
+  var currentPlayer = allPlayers[playerIndex];
+    //var currentPlayer = humanPlayer;
+  var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 25.5) / 50));
   
   var cellLocation = playerCellPosition.mul(50);
   
-  var distanceToCellLocation = (cellLocation.x - humanPlayer.location.x) * humanPlayer.orientation.x
-			     + (cellLocation.y - humanPlayer.location.y) * humanPlayer.orientation.y;
+  var distanceToCellLocation = (cellLocation.x - currentPlayer.location.x) * currentPlayer.orientation.x
+			     + (cellLocation.y - currentPlayer.location.y) * currentPlayer.orientation.y;
  
-  if (playerSpeed != 0)
+  if (currentPlayer.speed != 0)
   {
-    if (humanPlayer.animationStartTimeStamp == null)
+    if (currentPlayer.animationStartTimeStamp == null)
     {
-      humanPlayer.animationStartTimeStamp = timeStamp;
+      currentPlayer.animationStartTimeStamp = timeStamp;
     }
   }
   else
   {
-    if (humanPlayer.animationStartTimeStamp != null)
+    if (currentPlayer.animationStartTimeStamp != null)
     {
-      humanPlayer.animationStartTimeStamp = null;
+      currentPlayer.animationStartTimeStamp = null;
     }
   }
 			     
-  var currentPlayerSpeed = playerSpeed;
-  if (playerSpeed > distanceToCellLocation)
+  var currentPlayerSpeed = currentPlayer.speed;
+  if (currentPlayerSpeed > distanceToCellLocation)
   {
     //Pruefe, ob naechtse Zelle begehbar ist.
-    if (gameMaze.getFieldValue(playerCellPosition.x + humanPlayer.orientation.x, playerCellPosition.y + humanPlayer.orientation.y) == 1)
+    if (gameMaze.getFieldValue(playerCellPosition.x + currentPlayer.orientation.x, playerCellPosition.y + currentPlayer.orientation.y) == 1)
     {
-      currentPlayerSpeed = Math.min(playerSpeed, distanceToCellLocation);
+      currentPlayerSpeed = distanceToCellLocation;
     }
     else
     {
-	var distanceToOtherCellLocation = ((cellLocation.x - humanPlayer.location.x) * Math.abs(humanPlayer.orientation.y)
-			      + (cellLocation.y - humanPlayer.location.y) * Math.abs(humanPlayer.orientation.x));
+	var distanceToOtherCellLocation = ((cellLocation.x - currentPlayer.location.x) * Math.abs(currentPlayer.orientation.y)
+			      + (cellLocation.y - currentPlayer.location.y) * Math.abs(currentPlayer.orientation.x));
 
-	var currentPlayerOtherSpeed = Math.min(playerSpeed, Math.abs(distanceToOtherCellLocation));
+	var currentPlayerOtherSpeed = Math.min(currentPlayerSpeed, Math.abs(distanceToOtherCellLocation));
 	if (distanceToOtherCellLocation > 0)
 	{
-	  humanPlayer.location.x += Math.abs(humanPlayer.orientation.y) * currentPlayerOtherSpeed;
-	  humanPlayer.location.y += Math.abs(humanPlayer.orientation.x) * currentPlayerOtherSpeed;
+	  currentPlayer.location.x += Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
+	  currentPlayer.location.y += Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
 	}
 	else
 	{
-  	  humanPlayer.location.x -= Math.abs(humanPlayer.orientation.y) * currentPlayerOtherSpeed;
-	  humanPlayer.location.y -= Math.abs(humanPlayer.orientation.x) * currentPlayerOtherSpeed;
+  	  currentPlayer.location.x -= Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
+	  currentPlayer.location.y -= Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
 	}
-	currentPlayerSpeed = playerSpeed - currentPlayerOtherSpeed;
+	currentPlayerSpeed -= currentPlayerOtherSpeed;
     }
   }
 
-  humanPlayer.location = humanPlayer.location.add(humanPlayer.orientation.mul(currentPlayerSpeed));
+  currentPlayer.location = currentPlayer.location.add(currentPlayer.orientation.mul(currentPlayerSpeed));
+  }
   
   CorrectViewPort();
   DrawCanvas(timeStamp);
@@ -117,14 +129,17 @@ start = 0;
 function DrawCanvas(timeStamp)
 {
   DrawMaze(viewPort);
-  DrawPlayer(viewPort, timeStamp);
+  for (var playerIndex = 0; playerIndex < allPlayers.length; playerIndex++)
+  {
+    DrawPlayer(allPlayers[playerIndex], viewPort, timeStamp);
+  }
   
   canvasContext.drawImage(doubleBufferCanvas, 0, 0);
 }
 
 function StartImageLoading()
 {
-   imageCount = 2;
+   imageCount = 3;
    
    dungeonImage = new Image();
    dungeonImage.onload = OnImageLoaded;
@@ -133,6 +148,10 @@ function StartImageLoading()
    activeImage = new Image();
    activeImage.onload = OnImageLoaded;
    activeImage.src = "aktive.png";
+
+   passiveImage = new Image();
+   passiveImage.onload = OnImageLoaded;
+   passiveImage.src = "passive.png";
 }
 
 function GetSpriteIndex(cellColumn, cellRow)
@@ -159,21 +178,23 @@ function CorrectViewPort()
   var width = gameMaze.width;
   var height = gameMaze.height;
   
-  if (humanPlayer.location.x - viewPort.x > windowWidth - 150)
+  var currentPlayer = humanPlayer;
+  
+  if (currentPlayer.location.x - viewPort.x > windowWidth - 150)
   {
-    viewPort.x = humanPlayer.location.x - windowWidth + 150 ;
+    viewPort.x = currentPlayer.location.x - windowWidth + 150 ;
   }
-  if (humanPlayer.location.x - viewPort.x < 100)
+  if (currentPlayer.location.x - viewPort.x < 100)
   {
-    viewPort.x = humanPlayer.location.x - 100 ;
+    viewPort.x = currentPlayer.location.x - 100 ;
   }
-  if (humanPlayer.location.y - viewPort.y > windowHeight - 150)
+  if (currentPlayer.location.y - viewPort.y > windowHeight - 150)
   {
-    viewPort.y = humanPlayer.location.y - windowHeight + 150 ;
+    viewPort.y = currentPlayer.location.y - windowHeight + 150 ;
   }
-  if (humanPlayer.location.y - viewPort.y < 100)
+  if (currentPlayer.location.y - viewPort.y < 100)
   {
-    viewPort.y = humanPlayer.location.y - 100 ;
+    viewPort.y = currentPlayer.location.y - 100 ;
   }
   
   if (viewPort.x + windowWidth > width * 50)
@@ -221,30 +242,30 @@ function DrawMaze(viewPort)
   }  
 }
 
-function DrawPlayer(viewPort, timeStamp)
+function DrawPlayer(currentPlayer, viewPort, timeStamp)
 {
   var animationIndex = 0;
-  if (humanPlayer.animationStartTimeStamp != null)
+  if (currentPlayer.animationStartTimeStamp != null)
   {
-    animationIndex = Math.floor((timeStamp - humanPlayer.animationStartTimeStamp) / 100) % 8;
+    animationIndex = Math.floor((timeStamp - currentPlayer.animationStartTimeStamp) / 100) % 8;
   }
   var spriteIndex = 0;
-  if (humanPlayer.orientation.x > 0)
+  if (currentPlayer.orientation.x > 0)
   {
     spriteIndex = 24;
   }
-  if (humanPlayer.orientation.x < 0)
+  if (currentPlayer.orientation.x < 0)
   {
     spriteIndex = 8;
   }
-  if (humanPlayer.orientation.y > 0)
+  if (currentPlayer.orientation.y > 0)
   {
     spriteIndex = 16;
   }
-  spriteIndex += animationIndex;
+  spriteIndex += currentPlayer.imageIndex * 4 * 8 + animationIndex;
   var spriteY = Math.floor(spriteIndex / 8);
   var spriteX = spriteIndex % 8;
-  doubleBufferCanvasContext.drawImage(activeImage, 50 * spriteX, 50 * spriteY, 50, 50, humanPlayer.location.x - viewPort.x, humanPlayer.location.y - viewPort.y, 50, 50);
+  doubleBufferCanvasContext.drawImage(currentPlayer.image, 50 * spriteX, 50 * spriteY, 50, 50, currentPlayer.location.x - viewPort.x, currentPlayer.location.y - viewPort.y, 50, 50);
 }
 
 function OnImageLoaded()
@@ -257,10 +278,18 @@ function OnImageLoaded()
      
      viewPort = new ViewPort(windowWidth, windowHeight);
      
-     humanPlayer = new Player();
+     allPlayers = new Array();
+     
+     humanPlayer = new Player(activeImage, 1);
      humanPlayer.location.x = 50;
      humanPlayer.location.y = 50;
-     playerSpeed = 0;
+     allPlayers.push(humanPlayer);
+     
+     enemyPlayer = new Player(passiveImage, 1);;
+     enemyPlayer.location.x = 50 * (width - 2);
+     enemyPlayer.location.y = 50 * (height - 2);
+     enemyPlayer.speed = 2;
+     allPlayers.push(enemyPlayer);
      
      gameMaze = new Maze(width, height);
      
@@ -272,46 +301,108 @@ function OnImageLoaded()
       doubleBufferCanvas.height = windowHeight;
       doubleBufferCanvasContext = doubleBufferCanvas.getContext("2d");
 
-     //setInterval(GameLoop, 40);
+     setInterval(ComputerControledMove, 250);
+      
      GameLoop(null);
    }
 }
 
+function ComputerControledMove()
+{
+  var currentPlayer = enemyPlayer;
+  var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 25.5) / 50));
+
+  if (gameMaze.getFieldValue(playerCellPosition.x + currentPlayer.orientation.x, playerCellPosition.y + currentPlayer.orientation.y) == 1)
+  {
+    var zufall = Math.floor(Math.random() * 4);
+    
+    if (zufall == 0)
+    {
+      currentPlayer.orientation = new Vector2d(0, -1);
+    }
+    else
+    {
+      if (zufall == 1)
+      {
+	currentPlayer.orientation = new Vector2d(0, 1);
+      }
+      else
+      {
+	if (zufall == 2)
+	{
+	  currentPlayer.orientation = new Vector2d(-1, 0);
+	}
+	else
+	{
+	  currentPlayer.orientation = new Vector2d(1, 0);
+	}
+      }
+    }
+
+    
+/*    
+    if (currentPlayer.orientation.x == 1)
+    {
+      currentPlayer.orientation = new Vector2d(0, -1);
+    }
+    else
+    {
+      if (currentPlayer.orientation.x == -1)
+      {
+	currentPlayer.orientation = new Vector2d(0, 1);
+      }
+      else
+      {
+	if (currentPlayer.orientation.y == -1)
+	{
+	  currentPlayer.orientation = new Vector2d(-1, 0);
+	}
+	else
+	{
+	  currentPlayer.orientation = new Vector2d(1, 0);
+	}
+      }
+    }*/
+    //currentPlayer.orientation = currentPlayer.orientation.mul(-1);
+  }
+}
+
 function OnKeyDown(e)
 {
+  var currentPlayer = humanPlayer;
   if (e.keyCode == 40)
   {
-    humanPlayer.orientation.x = 0;
-    humanPlayer.orientation.y = +1;
-    playerSpeed = 4;
+    currentPlayer.orientation.x = 0;
+    currentPlayer.orientation.y = +1;
+    currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 38)
   {
-    humanPlayer.orientation.x = 0;
-    humanPlayer.orientation.y = -1;
-    playerSpeed = 4;
+    currentPlayer.orientation.x = 0;
+    currentPlayer.orientation.y = -1;
+    currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 39)
   {
-    humanPlayer.orientation.x = +1;
-    humanPlayer.orientation.y = 0;
-    playerSpeed = 4;
+    currentPlayer.orientation.x = +1;
+    currentPlayer.orientation.y = 0;
+    currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 37)
   {
-    humanPlayer.orientation.x = -1;
-    humanPlayer.orientation.y = 0;
-    playerSpeed = 4;
+    currentPlayer.orientation.x = -1;
+    currentPlayer.orientation.y = 0;
+    currentPlayer.speed = 4;
     return;
   }
 }
 
 function OnKeyUp(e)
 {
-  playerSpeed = 0;
+  humanPlayer.speed = 0;
 }
 
 function Start()
