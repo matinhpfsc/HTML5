@@ -37,18 +37,8 @@ function ViewPort(width, height)
   this.height = height;
 }
 
-function MovePlayer(timeStamp)
+function MovePlayer(timeStamp, currentPlayer)
 {
-}
-
-function GameLoop(timeStamp)
-{
-  //TODO Spruenge begrenzen!
-
-  for (var playerIndex = 0; playerIndex < allPlayers.length; playerIndex++)
-  {
-  var currentPlayer = allPlayers[playerIndex];
-    //var currentPlayer = humanPlayer;
   var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 25.5) / 50));
   
   var cellLocation = playerCellPosition.mul(50);
@@ -85,21 +75,24 @@ function GameLoop(timeStamp)
 			      + (cellLocation.y - currentPlayer.location.y) * Math.abs(currentPlayer.orientation.x));
 
 	var currentPlayerOtherSpeed = Math.min(currentPlayerSpeed, Math.abs(distanceToOtherCellLocation));
-	if (distanceToOtherCellLocation > 0)
-	{
-	  currentPlayer.location.x += Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
-	  currentPlayer.location.y += Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
-	}
-	else
-	{
-  	  currentPlayer.location.x -= Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
-	  currentPlayer.location.y -= Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
-	}
+
+	var sgn = distanceToOtherCellLocation > 0 ? 1 : -1;
+	currentPlayer.location.x += sgn * Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
+	currentPlayer.location.y += sgn * Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
 	currentPlayerSpeed -= currentPlayerOtherSpeed;
     }
   }
 
   currentPlayer.location = currentPlayer.location.add(currentPlayer.orientation.mul(currentPlayerSpeed));
+}
+
+function GameLoop(timeStamp)
+{
+  //TODO Spruenge begrenzen!
+
+  for (var playerIndex = 0; playerIndex < allPlayers.length; playerIndex++)
+  {
+    MovePlayer(timeStamp, allPlayers[playerIndex]);
   }
   
   CorrectViewPort();
