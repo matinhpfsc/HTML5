@@ -22,6 +22,11 @@ function Vector2d(x, y)
   {
     return new Vector2d(this.x + otherVector.x, this.y + otherVector.y);
   }
+  
+  this.equals = function(otherVector)
+  {
+    return this.x == otherVector.x && this.y == otherVector.y;
+  }
 }
 
 function ViewPort(width, height)  
@@ -314,56 +319,32 @@ function ComputerControledMove()
 
   if (gameMaze.getFieldValue(playerCellPosition.x + currentPlayer.orientation.x, playerCellPosition.y + currentPlayer.orientation.y) == 1)
   {
-    var zufall = Math.floor(Math.random() * 4);
-    
-    if (zufall == 0)
-    {
-      currentPlayer.orientation = new Vector2d(0, -1);
-    }
-    else
-    {
-      if (zufall == 1)
+      var possibleWays = new Array();
+      if (gameMaze.getFieldValue(playerCellPosition.x + 0, playerCellPosition.y + 1) == 0 && !currentPlayer.orientation.equals(new Vector2d(0, -1)))
       {
-	currentPlayer.orientation = new Vector2d(0, 1);
+	possibleWays.push(new Vector2d(0, 1));
       }
-      else
+      if (gameMaze.getFieldValue(playerCellPosition.x + 1, playerCellPosition.y + 0) == 0 && !currentPlayer.orientation.equals(new Vector2d(-1, 0)))
       {
-	if (zufall == 2)
-	{
-	  currentPlayer.orientation = new Vector2d(-1, 0);
-	}
-	else
-	{
-	  currentPlayer.orientation = new Vector2d(1, 0);
-	}
+	possibleWays.push(new Vector2d(1, 0));
       }
-    }
+      if (gameMaze.getFieldValue(playerCellPosition.x + 0, playerCellPosition.y - 1) == 0 && !currentPlayer.orientation.equals(new Vector2d(0, 1)))
+      {
+	possibleWays.push(new Vector2d(0, -1));
+      }
+      if (gameMaze.getFieldValue(playerCellPosition.x - 1, playerCellPosition.y + 0) == 0 && !currentPlayer.orientation.equals(new Vector2d(1, 0)))
+      {
+	possibleWays.push(new Vector2d(-1, 0));
+      }
 
-    
-/*    
-    if (currentPlayer.orientation.x == 1)
-    {
-      currentPlayer.orientation = new Vector2d(0, -1);
-    }
-    else
-    {
-      if (currentPlayer.orientation.x == -1)
+      if (possibleWays. length > 0)
       {
-	currentPlayer.orientation = new Vector2d(0, 1);
+	currentPlayer.orientation = possibleWays[Math.floor(Math.random() * possibleWays.length)];
       }
       else
       {
-	if (currentPlayer.orientation.y == -1)
-	{
-	  currentPlayer.orientation = new Vector2d(-1, 0);
-	}
-	else
-	{
-	  currentPlayer.orientation = new Vector2d(1, 0);
-	}
+	currentPlayer.orientation = currentPlayer.orientation.mul(-1);
       }
-    }*/
-    //currentPlayer.orientation = currentPlayer.orientation.mul(-1);
   }
 }
 
