@@ -290,11 +290,28 @@ function OnImageLoaded()
      humanPlayer.location.y = 50;
      allPlayers.push(humanPlayer);
      
-     enemyPlayer = new Player(passiveImage, 1);;
+     enemyPlayers = new Array();
+     
+     enemyPlayer = new Player(passiveImage, 1);
      enemyPlayer.location.x = 50 * (width - 2);
      enemyPlayer.location.y = 50 * (height - 2);
      enemyPlayer.speed = 2;
      allPlayers.push(enemyPlayer);
+     enemyPlayers.push(enemyPlayer);
+
+     enemyPlayer = new Player(passiveImage, 0);
+     enemyPlayer.location.x = 50 * (width - 2);
+     enemyPlayer.location.y = 50 * 1;
+     enemyPlayer.speed = 2;
+     allPlayers.push(enemyPlayer);
+     enemyPlayers.push(enemyPlayer);
+     
+     enemyPlayer = new Player(activeImage, 4);
+     enemyPlayer.location.x = 50 * 1;
+     enemyPlayer.location.y = 50 * (height - 2);
+     enemyPlayer.speed = 2;
+     allPlayers.push(enemyPlayer);
+     enemyPlayers.push(enemyPlayer);
      
      gameMaze = new Maze(width, height);
      
@@ -314,7 +331,9 @@ function OnImageLoaded()
 
 function ComputerControledMove()
 {
-  var currentPlayer = enemyPlayer;
+  for (var playerIndex = 0; playerIndex < enemyPlayers.length; playerIndex++)
+  {
+  var currentPlayer = enemyPlayers[playerIndex];
   var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 25.5) / 50));
 
   if (gameMaze.getFieldValue(playerCellPosition.x + currentPlayer.orientation.x, playerCellPosition.y + currentPlayer.orientation.y) == 1)
@@ -345,6 +364,7 @@ function ComputerControledMove()
       {
 	currentPlayer.orientation = currentPlayer.orientation.mul(-1);
       }
+  }
   }
 }
 
