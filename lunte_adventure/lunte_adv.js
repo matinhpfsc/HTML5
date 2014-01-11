@@ -29,6 +29,11 @@ function Vector2d(x, y)
   }
 }
 
+UP = new Vector2d(0, -1);
+DOWN = new Vector2d(0, +1);
+LEFT = new Vector2d(-1, 0);
+RIGHT = new Vector2d(+1, 0);
+
 function ViewPort(width, height)  
 {
   this.x = 0;
@@ -39,7 +44,7 @@ function ViewPort(width, height)
 
 function MovePlayer(timeStamp, currentPlayer)
 {
-  var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 25.5) / 50));
+  var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 24.5) / 50));
   
   var cellLocation = playerCellPosition.mul(50);
   
@@ -366,29 +371,25 @@ function OnKeyDown(e)
   var currentPlayer = humanPlayer;
   if (e.keyCode == 40)
   {
-    currentPlayer.orientation.x = 0;
-    currentPlayer.orientation.y = +1;
+    currentPlayer.orientation = DOWN;
     currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 38)
   {
-    currentPlayer.orientation.x = 0;
-    currentPlayer.orientation.y = -1;
+    currentPlayer.orientation = UP;
     currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 39)
   {
-    currentPlayer.orientation.x = +1;
-    currentPlayer.orientation.y = 0;
+    currentPlayer.orientation = RIGHT;
     currentPlayer.speed = 4;
     return;
   }
   if (e.keyCode == 37)
   {
-    currentPlayer.orientation.x = -1;
-    currentPlayer.orientation.y = 0;
+    currentPlayer.orientation = LEFT;
     currentPlayer.speed = 4;
     return;
   }
