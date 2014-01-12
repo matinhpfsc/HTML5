@@ -6,6 +6,55 @@ function Player(image, imageIndex)
   this.image = image;
   this.imageIndex = imageIndex;
   this.speed = 0;
+  
+  this.move = function (timeStamp)
+  {
+    var playerCellPosition = new Vector2d(Math.floor((this.location.x + 24.5) / 50), Math.floor((this.location.y + 24.5) / 50));
+    
+    var cellLocation = playerCellPosition.mul(50);
+    
+    var distanceToCellLocation = (cellLocation.x - this.location.x) * this.orientation.x
+			      + (cellLocation.y - this.location.y) * this.orientation.y;
+  
+    if (this.speed != 0)
+    {
+      if (this.animationStartTimeStamp == null)
+      {
+	this.animationStartTimeStamp = timeStamp;
+      }
+    }
+    else
+    {
+      if (this.animationStartTimeStamp != null)
+      {
+	this.animationStartTimeStamp = null;
+      }
+    }
+			      
+    var currentPlayerSpeed = this.speed;
+    if (currentPlayerSpeed > distanceToCellLocation)
+    {
+      //Pruefe, ob naechtse Zelle begehbar ist.
+      if (gameMaze.getFieldValue(playerCellPosition.x + this.orientation.x, playerCellPosition.y + this.orientation.y) == 1)
+      {
+	currentPlayerSpeed = distanceToCellLocation;
+      }
+      else
+      {
+	  var distanceToOtherCellLocation = ((cellLocation.x - this.location.x) * Math.abs(this.orientation.y)
+				+ (cellLocation.y - this.location.y) * Math.abs(this.orientation.x));
+
+	  var currentPlayerOtherSpeed = Math.min(currentPlayerSpeed, Math.abs(distanceToOtherCellLocation));
+
+	  var sgn = distanceToOtherCellLocation > 0 ? 1 : -1;
+	  this.location.x += sgn * Math.abs(this.orientation.y) * currentPlayerOtherSpeed;
+	  this.location.y += sgn * Math.abs(this.orientation.x) * currentPlayerOtherSpeed;
+	  currentPlayerSpeed -= currentPlayerOtherSpeed;
+      }
+    }
+
+    this.location = this.location.add(this.orientation.mul(currentPlayerSpeed));
+  }
 }
 
 function Vector2d(x, y)
@@ -42,62 +91,13 @@ function ViewPort(width, height)
   this.height = height;
 }
 
-function MovePlayer(timeStamp, currentPlayer)
-{
-  var playerCellPosition = new Vector2d(Math.floor((currentPlayer.location.x + 24.5) / 50), Math.floor((currentPlayer.location.y + 24.5) / 50));
-  
-  var cellLocation = playerCellPosition.mul(50);
-  
-  var distanceToCellLocation = (cellLocation.x - currentPlayer.location.x) * currentPlayer.orientation.x
-			     + (cellLocation.y - currentPlayer.location.y) * currentPlayer.orientation.y;
- 
-  if (currentPlayer.speed != 0)
-  {
-    if (currentPlayer.animationStartTimeStamp == null)
-    {
-      currentPlayer.animationStartTimeStamp = timeStamp;
-    }
-  }
-  else
-  {
-    if (currentPlayer.animationStartTimeStamp != null)
-    {
-      currentPlayer.animationStartTimeStamp = null;
-    }
-  }
-			     
-  var currentPlayerSpeed = currentPlayer.speed;
-  if (currentPlayerSpeed > distanceToCellLocation)
-  {
-    //Pruefe, ob naechtse Zelle begehbar ist.
-    if (gameMaze.getFieldValue(playerCellPosition.x + currentPlayer.orientation.x, playerCellPosition.y + currentPlayer.orientation.y) == 1)
-    {
-      currentPlayerSpeed = distanceToCellLocation;
-    }
-    else
-    {
-	var distanceToOtherCellLocation = ((cellLocation.x - currentPlayer.location.x) * Math.abs(currentPlayer.orientation.y)
-			      + (cellLocation.y - currentPlayer.location.y) * Math.abs(currentPlayer.orientation.x));
-
-	var currentPlayerOtherSpeed = Math.min(currentPlayerSpeed, Math.abs(distanceToOtherCellLocation));
-
-	var sgn = distanceToOtherCellLocation > 0 ? 1 : -1;
-	currentPlayer.location.x += sgn * Math.abs(currentPlayer.orientation.y) * currentPlayerOtherSpeed;
-	currentPlayer.location.y += sgn * Math.abs(currentPlayer.orientation.x) * currentPlayerOtherSpeed;
-	currentPlayerSpeed -= currentPlayerOtherSpeed;
-    }
-  }
-
-  currentPlayer.location = currentPlayer.location.add(currentPlayer.orientation.mul(currentPlayerSpeed));
-}
-
 function GameLoop(timeStamp)
 {
   //TODO Spruenge begrenzen!
 
   for (var playerIndex = 0; playerIndex < allPlayers.length; playerIndex++)
   {
-    MovePlayer(timeStamp, allPlayers[playerIndex]);
+    allPlayers[playerIndex].move(timeStamp);
   }
   
   CorrectViewPort();
@@ -121,7 +121,7 @@ function GameLoop(timeStamp)
      }
      else*/
      {
-    window.requestAnimationFrame(GameLoop);
+    window.requestAnimFrame(GameLoop);
      }
    }
 }
@@ -428,7 +428,22 @@ function Start()
    
    canvasContext = canvas.getContext("2d");
    
+   window.requestAnimFrame = GetRequestAnimFrameFunction();
+   
    StartImageLoading();
+}
+
+function GetRequestAnimFrameFunction()
+{
+  //These part copied from http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/:
+  // shim layer with setTimeout fallback
+  return  window.requestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      function(callback)
+      {
+	window.setTimeout(callback, 1000 / 60);
+      };
 }
 
 Start();
